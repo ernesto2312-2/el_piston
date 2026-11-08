@@ -39,6 +39,16 @@ Future<void> _loadFonts() async {
     }
   }
   if (found) await loader.load();
+
+  // Íconos de Material: sin esto se dibujan como cuadrados.
+  final icons = File(
+    '$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+  );
+  if (icons.existsSync()) {
+    final iconLoader = FontLoader('MaterialIcons')
+      ..addFont(Future.value(ByteData.view(icons.readAsBytesSync().buffer)));
+    await iconLoader.load();
+  }
 }
 
 /// Datos de ejemplo para que las pantallas no salgan vacías.
@@ -177,6 +187,11 @@ Future<void> _openApp(WidgetTester tester) async {
   tester.view.physicalSize = const Size(1080, 2340);
   tester.view.devicePixelRatio = 3.0;
   addTearDown(tester.view.reset);
+
+  // Los tests dibujan las sombras como bloques negros sólidos; esto las
+  // devuelve a la normalidad (y se restaura al final para no fallar).
+  debugDisableShadows = false;
+  addTearDown(() => debugDisableShadows = true);
 
   await tester.pumpWidget(
     RepaintBoundary(key: _appKey, child: const ElPistonApp()),
