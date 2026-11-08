@@ -1,0 +1,42 @@
+name: Compilar APK release
+
+# Se ejecuta a mano: pestaña Actions -> "Compilar APK release" -> Run workflow.
+on:
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # El repositorio no incluye la carpeta android/, así que se genera aquí
+      # (solo dentro de esta ejecución; no modifica tu repositorio).
+      - name: Generar la carpeta android
+        run: flutter create --platforms=android --project-name el_piston .
+
+      - name: Descargar dependencias
+        run: flutter pub get
+
+      - name: Compilar APK release
+        run: flutter build apk --release
+
+      - name: Guardar el APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: el-piston-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
